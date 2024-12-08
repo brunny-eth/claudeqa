@@ -5,25 +5,42 @@ const ChatInterface = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const newMessage = { role: 'user', content: input };
-    setMessages(prev => [...prev, newMessage]);
+    const userMessage = { role: 'user', content: input };
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setError(null);
 
-    // TODO: Add API call here
-    // Temporary mock response
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:3000/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: input }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'This is a placeholder response. API integration coming soon!'
+        content: data.response
       }]);
+    } catch (err) {
+      setError('Failed to get response from Claude. Please try again.');
+      console.error('Error:', err);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -53,6 +70,13 @@ const ChatInterface = () => {
             </div>
           </div>
         )}
+        {error && (
+          <div className="flex justify-center">
+            <div className="bg-red-100 border border-red-400 text-red-700 rounded-lg p-3">
+              {error}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Input form */}
@@ -64,10 +88,12 @@ const ChatInterface = () => {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask a question..."
             className="flex-1 rounded-lg border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isLoading}
           />
           <button
             type="submit"
-            className="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300"
+            disabled={isLoading}
           >
             <Send size={20} />
           </button>
