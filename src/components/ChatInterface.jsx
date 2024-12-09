@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import { Send } from 'lucide-react';
 
-const ChatInterface = () => {
+const ChatInterface = ({ format }) => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const formatLabels = {
+    'friday-fourball': 'Friday Four-Ball',
+    'saturday-fourball': 'Saturday Four-Ball',
+    'saturday-alternate': 'Saturday Alternate Shot',
+    'sunday-singles': 'Sunday Singles'
+  };
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -24,7 +31,10 @@ const ChatInterface = () => {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ message: inputValue })
+        body: JSON.stringify({ 
+          message: inputValue,
+          format: format 
+        })
       });
 
       const data = await response.json();
@@ -45,12 +55,11 @@ const ChatInterface = () => {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header */}
       <div className="bg-green-600 text-white p-4 shadow-md">
         <h1 className="text-xl font-semibold">Golf Rules Assistant</h1>
+        <p className="text-sm mt-1">Format: {formatLabels[format]}</p>
       </div>
 
-      {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message, index) => (
           <div
@@ -77,7 +86,6 @@ const ChatInterface = () => {
         )}
       </div>
 
-      {/* Input Area */}
       <div className="p-4 bg-white border-t">
         <div className="max-w-4xl mx-auto flex gap-2">
           <input
