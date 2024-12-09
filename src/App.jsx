@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ChatInterface from './components/ChatInterface';
 import FormatSelector from './components/FormatSelector'; 
+import TournamentStandings from './components/TournamentStandings';
 
 const GolfApp = () => {
   const [currentScreen, setCurrentScreen] = useState('home');
@@ -42,9 +43,8 @@ const GolfApp = () => {
       {currentScreen === 'rules' && (
         <ChatInterface format={selectedFormat} />
       )}
-      {currentScreen === 'tournament' && (
-        <div className="p-4">Tournament standings component coming soon...</div>
-      )}
+      {currentScreen === 'tournament' && <TournamentStandings />}
+
       
       {currentScreen !== 'home' && (
         <button
