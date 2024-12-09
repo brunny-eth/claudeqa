@@ -3,49 +3,54 @@ import { Send } from 'lucide-react';
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
+  const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  const handleSend = async () => {
+    if (!inputValue.trim()) return;
 
-    const userMessage = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
     setIsLoading(true);
-    setError(null);
+    const newMessage = {
+      role: 'user',
+      content: inputValue
+    };
+
+    setMessages(prev => [...prev, newMessage]);
+    setInputValue('');
 
     try {
-      const response = await fetch('http://localhost:3000/api/chat', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ message: inputValue })
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
 
       const data = await response.json();
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: data.response
       }]);
-    } catch (err) {
-      setError('Failed to get response from Claude. Please try again.');
-      console.error('Error:', err);
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, I had trouble accessing the rules. Please try again.'
+      }]);
     }
+
+    setIsLoading(false);
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      {/* Chat messages */}
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Header */}
+      <div className="bg-green-600 text-white p-4 shadow-md">
+        <h1 className="text-xl font-semibold">Golf Rules Assistant</h1>
+      </div>
+
+      {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message, index) => (
           <div
@@ -53,10 +58,10 @@ const ChatInterface = () => {
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-lg p-3 ${
+              className={`max-w-[80%] p-3 rounded-lg ${
                 message.role === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white border border-gray-200'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-white shadow-md'
               }`}
             >
               {message.content}
@@ -65,40 +70,34 @@ const ChatInterface = () => {
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 rounded-lg p-3">
-              Thinking...
-            </div>
-          </div>
-        )}
-        {error && (
-          <div className="flex justify-center">
-            <div className="bg-red-100 border border-red-400 text-red-700 rounded-lg p-3">
-              {error}
+            <div className="bg-white shadow-md p-3 rounded-lg">
+              Checking the rules...
             </div>
           </div>
         )}
       </div>
 
-      {/* Input form */}
-      <form onSubmit={handleSubmit} className="border-t p-4">
-        <div className="flex gap-2">
+      {/* Input Area */}
+      <div className="p-4 bg-white border-t">
+        <div className="max-w-4xl mx-auto flex gap-2">
           <input
             type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question..."
-            className="flex-1 rounded-lg border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={isLoading}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Describe your situation..."
+            className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           />
           <button
-            type="submit"
-            className="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300"
+            onClick={handleSend}
             disabled={isLoading}
+            className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 
+                     disabled:bg-green-300 transition-colors"
           >
             <Send size={20} />
           </button>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
